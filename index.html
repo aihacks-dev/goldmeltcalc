@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Gold Melt (Offline PWA)</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#111111" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <!-- iOS icon -->
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+
+<body>
+  <main class="card">
+    <h1>Gold Melt (Offline PWA)</h1>
+    <p class="muted">Hello world. Enter spot price manually, get pre-1933 melt values.</p>
+
+    <section class="row">
+      <label for="spot">Gold spot ($/oz)</label>
+      <input id="spot" type="number" inputmode="decimal" step="0.01" min="0" placeholder="e.g., 5300.00" />
+      <button id="saveBtn" type="button">Save</button>
+    </section>
+
+    <section class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Denomination</th>
+            <th>Gold weight (AGW oz)</th>
+            <th>Melt @ spot</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </section>
+
+    <footer class="muted small">
+      Offline ready after first load. Install on iPhone: Safari → Share → Add to Home Screen.
+      <div id="status" class="status"></div>
+    </footer>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
