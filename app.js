@@ -1,8 +1,4 @@
-const APP_VERSION = "v10";
-
-const discountSlider = document.getElementById("discount");
-const discountLabel  = document.getElementById("discountLabel");
-
+const APP_VERSION = "v11";
 
 // Pre-1933 US gold approximate AGW (troy oz)
 const PRE33 = [
@@ -12,12 +8,12 @@ const PRE33 = [
   { label: "$20 (Double Eagle)",  agw: 0.96750 }
 ];
 
-// Modern American Gold Eagle (AGE) bullion weights (troy oz)
+// Modern American Gold Eagle (AGE) bullion gold weights (troy oz)
 const AGE = [
-  { label: "AGE 1 oz",   agw: 1.0000 },
-  { label: "AGE 1/2 oz", agw: 0.5000 },
-  { label: "AGE 1/4 oz", agw: 0.2500 },
-  { label: "AGE 1/10 oz",agw: 0.1000 }
+  { label: "AGE 1 oz",    agw: 1.0000 },
+  { label: "AGE 1/2 oz",  agw: 0.5000 },
+  { label: "AGE 1/4 oz",  agw: 0.2500 },
+  { label: "AGE 1/10 oz", agw: 0.1000 }
 ];
 
 const spotInput = document.getElementById("spot");
@@ -26,8 +22,11 @@ const rows = document.getElementById("rows");
 const thead = document.getElementById("thead");
 const status = document.getElementById("status");
 
-const showMinus2 = document.getElementById("showMinus2");
-const showMinus5 = document.getElementById("showMinus5");
+const discountSlider = document.getElementById("discount");
+const discountLabel = document.getElementById("discountLabel");
+
+const versionEl = document.getElementById("version");
+if (versionEl) versionEl.textContent = APP_VERSION;
 
 function money(n) {
   if (!Number.isFinite(n)) return "—";
@@ -35,35 +34,46 @@ function money(n) {
 }
 
 function setStatus(msg) {
-  status.textContent = msg || "";
+  if (status) status.textContent = msg || "";
 }
 
 function getSpot() {
-  const s = parseFloat(spotInput.value);
+  if (!spotInput) return 0;
+  const raw = (spotInput.value || "").replace(/[$,\s]/g, "").trim();
+  const s = parseFloat(raw);
   return Number.isFinite(s) ? s : 0;
 }
 
+function getDiscountPct() {
+  // If slider missing for any reason, treat as 0%
+  if (!discountSlider) return 0;
+  const d = parseFloat(discountSlider.value || "0");
+  return Number.isFinite(d) ? d : 0;
+}
+
 function buildHeader() {
+  if (!thead) return;
   const d = getDiscountPct();
-  const label = d === 0 ? "Melt @ spot" : `Melt @ −${d}%`;
+  const colTitle = d === 0 ? "Melt @ spot" : `Melt @ −${d}%`;
 
   thead.innerHTML = `
     <tr>
       <th>Coin</th>
       <th>Gold weight (AGW oz)</th>
-      <th>${label}</th>
+      <th>${colTitle}</th>
     </tr>
   `;
 }
 
-
-function addSectionTitle(title, colCount) {
+function addSectionTitle(title) {
+  if (!rows) return;
   const tr = document.createElement("tr");
-  tr.innerHTML = `<td colspan="${colCount}" style="font-weight:700; background:#1c1c24;">${title}</td>`;
+  tr.innerHTML = `<td colspan="3" style="font-weight:700; background:#1c1c24;">${title}</td>`;
   rows.appendChild(tr);
 }
 
 function addCoinRow(coin, spot) {
+  if (!rows) return;
   const d = getDiscountPct() / 100;
   const melt = spot * coin.agw * (1 - d);
 
@@ -76,26 +86,26 @@ function addCoinRow(coin, spot) {
   rows.appendChild(tr);
 }
 
-
 function render() {
+  // If table elements missing, fail gracefully
+  if (!rows || !thead) {
+    setStatus("Error: table elements missing (thead/rows).");
+    return;
+  }
+
   const spot = getSpot();
-  rows.innerHTML = "";
-
   const d = getDiscountPct();
-  discountLabel.textContent = `${d}%`;
 
-  
+  if (discountLabel) discountLabel.textContent = `${d}%`;
+
+  rows.innerHTML = "";
   buildHeader();
 
-  const colCount = 3 + (showMinus2.checked ? 1 : 0) + (showMinus5.checked ? 1 : 0);
+  addSectionTitle("Pre-1933 U.S. Gold");
+  PRE33.forEach(c => addCoinRow(c, spot));
 
-  // Section: Pre-1933
-  addSectionTitle("Pre-1933 U.S. Gold", colCount);
-  for (const c of PRE33) addCoinRow(c, spot);
-
-  // Section: Modern AGEs
-  addSectionTitle("Modern American Gold Eagle (AGE)", colCount);
-  for (const c of AGE) addCoinRow(c, spot);
+  addSectionTitle("Modern American Gold Eagle (AGE)");
+  AGE.forEach(c => addCoinRow(c, spot));
 
   if (spot > 0) setStatus("Ready. Works offline after first load.");
   else setStatus("Enter spot and tap Save (optional).");
@@ -103,41 +113,38 @@ function render() {
 
 function saveSettings() {
   const spot = getSpot();
-  if (!Number.isFinite(spot) || spot <= 0) {
+  if (spot <= 0) {
     setStatus("Please enter a valid spot price > 0.");
     render();
     return;
   }
 
   localStorage.setItem("goldSpot", spot.toFixed(2));
-  localStorage.setItem("discountPct", discountSlider.value);
-
+  localStorage.setItem("discountPct", String(getDiscountPct()));
   setStatus("Saved to this iPhone. Offline-ready.");
   render();
 }
 
 function loadSettings() {
   const savedSpot = localStorage.getItem("goldSpot");
-  if (savedSpot) spotInput.value = savedSpot;
+  if (savedSpot && spotInput) spotInput.value = savedSpot;
 
-  showMinus2.checked = (localStorage.getItem("showMinus2") === "1");
-  showMinus5.checked = (localStorage.getItem("showMinus5") === "1");
+  const savedD = localStorage.getItem("discountPct");
+  if (savedD !== null && discountSlider) discountSlider.value = savedD;
 
   render();
 }
 
-// Live update
-spotInput.addEventListener("input", render);
+// Events
+if (spotInput) {
+  spotInput.addEventListener("input", render);
+  // Helps iOS PWAs sometimes
+  spotInput.addEventListener("touchend", () => spotInput.focus(), { passive: true });
+}
+if (discountSlider) discountSlider.addEventListener("input", render);
+if (saveBtn) saveBtn.addEventListener("click", saveSettings);
 
-discountSlider.addEventListener("input", () => {
-  discountLabel.textContent = `${getDiscountPct()}%`;
-  render();
-});
-
-
-saveBtn.addEventListener("click", saveSettings);
-
-// Service worker registration (GitHub Pages safe: relative path)
+// Service worker registration (GitHub Pages safe)
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
@@ -148,19 +155,4 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-function getDiscountPct() {
-  return parseFloat(discountSlider.value || "0");
-}
-
 loadSettings();
-
-
-const versionEl = document.getElementById("version");
-if (versionEl) {
-  versionEl.textContent = APP_VERSION;
-}
-
-
-
-
-
