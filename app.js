@@ -1,83 +1,150 @@
-// Pre-1933 US gold "common melt" weights (AGW in troy ounces)
-// (These are the standard widely-used approximate AGW values.)
-const COINS = [
+// Pre-1933 US gold approximate AGW (troy oz)
+const PRE33 = [
   { label: "$2.5 (Quarter Eagle)", agw: 0.12094 },
   { label: "$5 (Half Eagle)",     agw: 0.24187 },
   { label: "$10 (Eagle)",         agw: 0.48375 },
   { label: "$20 (Double Eagle)",  agw: 0.96750 }
 ];
 
+// Modern American Gold Eagle (AGE) bullion weights (troy oz)
+const AGE = [
+  { label: "AGE 1 oz",   agw: 1.0000 },
+  { label: "AGE 1/2 oz", agw: 0.5000 },
+  { label: "AGE 1/4 oz", agw: 0.2500 },
+  { label: "AGE 1/10 oz",agw: 0.1000 }
+];
+
 const spotInput = document.getElementById("spot");
 const saveBtn = document.getElementById("saveBtn");
 const rows = document.getElementById("rows");
+const thead = document.getElementById("thead");
 const status = document.getElementById("status");
 
+const showMinus2 = document.getElementById("showMinus2");
+const showMinus5 = document.getElementById("showMinus5");
+
 function money(n) {
-  // Avoid showing "NaN"
   if (!Number.isFinite(n)) return "—";
   return n.toLocaleString(undefined, { style: "currency", currency: "USD" });
-}
-
-function renderTable(spot) {
-  rows.innerHTML = "";
-  for (const c of COINS) {
-    const melt = spot * c.agw;
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${c.label}</td>
-      <td>${c.agw.toFixed(5)}</td>
-      <td>${money(melt)}</td>
-    `;
-    rows.appendChild(tr);
-  }
 }
 
 function setStatus(msg) {
   status.textContent = msg || "";
 }
 
-function loadSpot() {
-  const saved = localStorage.getItem("goldSpot");
-  if (saved) {
-    spotInput.value = saved;
-    setStatus("Loaded saved spot from this iPhone.");
-  } else {
-    setStatus("Enter spot and tap Save.");
-  }
-  const spot = parseFloat(spotInput.value);
-  renderTable(Number.isFinite(spot) ? spot : 0);
+function getSpot() {
+  const s = parseFloat(spotInput.value);
+  return Number.isFinite(s) ? s : 0;
 }
 
-function saveSpot() {
-  const spot = parseFloat(spotInput.value);
+function buildHeader() {
+  const cols = [
+    "Coin",
+    "Gold weight (AGW oz)",
+    "Melt @ spot"
+  ];
+
+  if (showMinus2.checked) cols.push("Melt @ -2%");
+  if (showMinus5.checked) cols.push("Melt @ -5%");
+
+  thead.innerHTML = `
+    <tr>
+      ${cols.map(c => `<th>${c}</th>`).join("")}
+    </tr>
+  `;
+}
+
+function addSectionTitle(title, colCount) {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td colspan="${colCount}" style="font-weight:700; background:#1c1c24;">${title}</td>`;
+  rows.appendChild(tr);
+}
+
+function addCoinRow(coin, spot) {
+  const colCount = 3 + (showMinus2.checked ? 1 : 0) + (showMinus5.checked ? 1 : 0);
+
+  const meltSpot = spot * coin.agw;
+  const melt2 = spot * 0.98 * coin.agw;
+  const melt5 = spot * 0.95 * coin.agw;
+
+  const tds = [
+    `<td>${coin.label}</td>`,
+    `<td>${coin.agw.toFixed(5)}</td>`,
+    `<td>${money(meltSpot)}</td>`
+  ];
+
+  if (showMinus2.checked) tds.push(`<td>${money(melt2)}</td>`);
+  if (showMinus5.checked) tds.push(`<td>${money(melt5)}</td>`);
+
+  const tr = document.createElement("tr");
+  tr.innerHTML = tds.join("");
+  rows.appendChild(tr);
+
+  return colCount;
+}
+
+function render() {
+  const spot = getSpot();
+  rows.innerHTML = "";
+
+  buildHeader();
+
+  const colCount = 3 + (showMinus2.checked ? 1 : 0) + (showMinus5.checked ? 1 : 0);
+
+  // Section: Pre-1933
+  addSectionTitle("Pre-1933 U.S. Gold", colCount);
+  for (const c of PRE33) addCoinRow(c, spot);
+
+  // Section: Modern AGEs
+  addSectionTitle("Modern American Gold Eagle (AGE)", colCount);
+  for (const c of AGE) addCoinRow(c, spot);
+
+  if (spot > 0) setStatus("Ready. Works offline after first load.");
+  else setStatus("Enter spot and tap Save (optional).");
+}
+
+function saveSettings() {
+  const spot = getSpot();
   if (!Number.isFinite(spot) || spot <= 0) {
     setStatus("Please enter a valid spot price > 0.");
-    renderTable(0);
+    render();
     return;
   }
+
   localStorage.setItem("goldSpot", spot.toFixed(2));
-  setStatus("Saved. (Works offline after first load.)");
-  renderTable(spot);
+  localStorage.setItem("showMinus2", showMinus2.checked ? "1" : "0");
+  localStorage.setItem("showMinus5", showMinus5.checked ? "1" : "0");
+
+  setStatus("Saved to this iPhone. Offline-ready.");
+  render();
 }
 
-// Live update table as you type (even without saving)
-spotInput.addEventListener("input", () => {
-  const spot = parseFloat(spotInput.value);
-  renderTable(Number.isFinite(spot) ? spot : 0);
-});
+function loadSettings() {
+  const savedSpot = localStorage.getItem("goldSpot");
+  if (savedSpot) spotInput.value = savedSpot;
 
-saveBtn.addEventListener("click", saveSpot);
+  showMinus2.checked = (localStorage.getItem("showMinus2") === "1");
+  showMinus5.checked = (localStorage.getItem("showMinus5") === "1");
 
-// Register service worker for offline caching
+  render();
+}
+
+// Live update
+spotInput.addEventListener("input", render);
+showMinus2.addEventListener("change", () => { localStorage.setItem("showMinus2", showMinus2.checked ? "1" : "0"); render(); });
+showMinus5.addEventListener("change", () => { localStorage.setItem("showMinus5", showMinus5.checked ? "1" : "0"); render(); });
+
+saveBtn.addEventListener("click", saveSettings);
+
+// Service worker registration (GitHub Pages safe: relative path)
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
       await navigator.serviceWorker.register("./sw.js");
     } catch (e) {
-      // If SW fails, app still works online.
       console.warn("Service worker failed:", e);
     }
   });
 }
 
-loadSpot();
+loadSettings();
