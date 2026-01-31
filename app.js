@@ -1,4 +1,8 @@
-const APP_VERSION = "v9";
+const APP_VERSION = "v10";
+
+const discountSlider = document.getElementById("discount");
+const discountLabel  = document.getElementById("discountLabel");
+
 
 // Pre-1933 US gold approximate AGW (troy oz)
 const PRE33 = [
@@ -40,21 +44,18 @@ function getSpot() {
 }
 
 function buildHeader() {
-  const cols = [
-    "Coin",
-    "Gold weight (AGW oz)",
-    "Melt @ spot"
-  ];
-
-  if (showMinus2.checked) cols.push("Melt @ -2%");
-  if (showMinus5.checked) cols.push("Melt @ -5%");
+  const d = getDiscountPct();
+  const label = d === 0 ? "Melt @ spot" : `Melt @ −${d}%`;
 
   thead.innerHTML = `
     <tr>
-      ${cols.map(c => `<th>${c}</th>`).join("")}
+      <th>Coin</th>
+      <th>Gold weight (AGW oz)</th>
+      <th>${label}</th>
     </tr>
   `;
 }
+
 
 function addSectionTitle(title, colCount) {
   const tr = document.createElement("tr");
@@ -63,32 +64,27 @@ function addSectionTitle(title, colCount) {
 }
 
 function addCoinRow(coin, spot) {
-  const colCount = 3 + (showMinus2.checked ? 1 : 0) + (showMinus5.checked ? 1 : 0);
-
-  const meltSpot = spot * coin.agw;
-  const melt2 = spot * 0.98 * coin.agw;
-  const melt5 = spot * 0.95 * coin.agw;
-
-  const tds = [
-    `<td>${coin.label}</td>`,
-    `<td>${coin.agw.toFixed(5)}</td>`,
-    `<td>${money(meltSpot)}</td>`
-  ];
-
-  if (showMinus2.checked) tds.push(`<td>${money(melt2)}</td>`);
-  if (showMinus5.checked) tds.push(`<td>${money(melt5)}</td>`);
+  const d = getDiscountPct() / 100;
+  const melt = spot * coin.agw * (1 - d);
 
   const tr = document.createElement("tr");
-  tr.innerHTML = tds.join("");
+  tr.innerHTML = `
+    <td>${coin.label}</td>
+    <td>${coin.agw.toFixed(5)}</td>
+    <td>${money(melt)}</td>
+  `;
   rows.appendChild(tr);
-
-  return colCount;
 }
+
 
 function render() {
   const spot = getSpot();
   rows.innerHTML = "";
 
+  const d = getDiscountPct();
+  discountLabel.textContent = `${d}%`;
+
+  
   buildHeader();
 
   const colCount = 3 + (showMinus2.checked ? 1 : 0) + (showMinus5.checked ? 1 : 0);
@@ -114,8 +110,7 @@ function saveSettings() {
   }
 
   localStorage.setItem("goldSpot", spot.toFixed(2));
-  localStorage.setItem("showMinus2", showMinus2.checked ? "1" : "0");
-  localStorage.setItem("showMinus5", showMinus5.checked ? "1" : "0");
+  localStorage.setItem("discountPct", discountSlider.value);
 
   setStatus("Saved to this iPhone. Offline-ready.");
   render();
@@ -133,8 +128,12 @@ function loadSettings() {
 
 // Live update
 spotInput.addEventListener("input", render);
-showMinus2.addEventListener("change", () => { localStorage.setItem("showMinus2", showMinus2.checked ? "1" : "0"); render(); });
-showMinus5.addEventListener("change", () => { localStorage.setItem("showMinus5", showMinus5.checked ? "1" : "0"); render(); });
+
+discountSlider.addEventListener("input", () => {
+  discountLabel.textContent = `${getDiscountPct()}%`;
+  render();
+});
+
 
 saveBtn.addEventListener("click", saveSettings);
 
@@ -149,12 +148,18 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+function getDiscountPct() {
+  return parseFloat(discountSlider.value || "0");
+}
+
 loadSettings();
+
 
 const versionEl = document.getElementById("version");
 if (versionEl) {
   versionEl.textContent = APP_VERSION;
 }
+
 
 
 
