@@ -1,3 +1,5 @@
+const APP_VERSION = "v4";
+
 // Pre-1933 US gold approximate AGW (troy oz)
 const PRE33 = [
   { label: "$2.5 (Quarter Eagle)", agw: 0.12094 },
@@ -148,3 +150,8 @@ if ("serviceWorker" in navigator) {
 }
 
 loadSettings();
+
+const versionEl = document.getElementById("version");
+if (versionEl) {
+  versionEl.textContent = APP_VERSION;
+}
