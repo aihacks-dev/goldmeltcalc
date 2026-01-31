@@ -1,4 +1,4 @@
-const APP_VERSION = "v12";
+const APP_VERSION = "v13";
 
 // Pre-1933 US gold approximate AGW (troy oz)
 const PRE33 = [
@@ -27,6 +27,53 @@ const discountLabel = document.getElementById("discountLabel");
 
 const versionEl = document.getElementById("version");
 if (versionEl) versionEl.textContent = APP_VERSION;
+
+const pinOverlay = document.getElementById("pinOverlay");
+const pinInput   = document.getElementById("pinInput");
+const pinBtn     = document.getElementById("pinBtn");
+const pinMsg     = document.getElementById("pinMsg");
+const pinTitle   = document.getElementById("pinTitle");
+
+const PIN_KEY = "appPIN";
+
+function isPinSet() {
+  return !!localStorage.getItem(PIN_KEY);
+}
+
+function lockApp() {
+  pinInput.value = "";
+  pinMsg.textContent = "";
+  pinOverlay.classList.remove("hidden");
+  setTimeout(() => pinInput.focus(), 200);
+}
+
+function unlockApp() {
+  pinOverlay.classList.add("hidden");
+}
+
+function handlePin() {
+  const entered = pinInput.value.trim();
+  if (entered.length !== 4) {
+    pinMsg.textContent = "Enter a 4-digit PIN";
+    return;
+  }
+
+  if (!isPinSet()) {
+    // First-time setup
+    localStorage.setItem(PIN_KEY, entered);
+    pinTitle.textContent = "Enter PIN";
+    unlockApp();
+    return;
+  }
+
+  const saved = localStorage.getItem(PIN_KEY);
+  if (entered === saved) {
+    unlockApp();
+  } else {
+    pinMsg.textContent = "Incorrect PIN";
+    pinInput.value = "";
+  }
+}
 
 function money(n) {
   if (!Number.isFinite(n)) return "—";
@@ -155,5 +202,21 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+if (pinBtn) pinBtn.addEventListener("click", handlePin);
+
+if (pinInput) {
+  pinInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handlePin();
+  });
+}
+
+// PIN initialization
+if (!isPinSet()) {
+  pinTitle.textContent = "Set a 4-digit PIN";
+}
+lockApp();
+
+
 loadSettings();
+
 
