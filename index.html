@@ -21,11 +21,23 @@
 <body>
   <main class="card">
     <h1>Gold Melt (Offline PWA)</h1>
-    <p class="muted">Hello world. Enter spot price manually, get pre-1933 melt values.</p>
+    <p class="muted">Enter spot price manually to get pre-1933 melt values + AGE values.</p>
 
 <section class="row">
   <label for="spot">Gold spot ($/oz)</label>
-  <input id="spot" type="number" inputmode="decimal" step="0.01" min="0" placeholder="e.g., 5300.00" />
+  
+<input
+  id="spot"
+  type="text"
+  inputmode="decimal"
+  enterkeyhint="done"
+  autocomplete="off"
+  autocorrect="off"
+  autocapitalize="off"
+  spellcheck="false"
+  placeholder="e.g., 5300.00"
+/>
+  
   <button id="saveBtn" type="button">Save</button>
 
   <div class="toggles">
@@ -58,7 +70,5 @@
   <script src="./app.js"></script>
 </body>
 </html>
-
-
 
 
