@@ -1,4 +1,4 @@
-const CACHE = "gold-melt-pwa-v7";
+const CACHE = "gold-melt-pwa-v8";
 const ASSETS = [
   "./",
   "./index.html",
@@ -41,6 +41,7 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+
 
 
 
