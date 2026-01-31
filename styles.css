@@ -62,3 +62,21 @@ thead th { background: #1c1c24; }
 tbody tr:last-child td { border-bottom: none; }
 
 .status { margin-top: 10px; }
+
+.toggles {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.toggle {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #0f0f13;
+  user-select: none;
+}
