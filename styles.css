@@ -87,4 +87,15 @@ tbody tr:last-child td { border-bottom: none; }
   height: 18px;
 }
 
+.version {
+  position: fixed;
+  bottom: 8px;
+  right: 10px;
+  font-size: 11px;
+  color: #888;
+  opacity: 0.7;
+  pointer-events: none; /* cannot block taps */
+}
+
+
 
