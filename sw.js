@@ -2,7 +2,7 @@ const CACHE = "gold-melt-pwa-v13";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v11",
+  "./styles.css?v13",
   "./app.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
@@ -41,6 +41,7 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+
 
 
 
