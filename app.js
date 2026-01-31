@@ -72,7 +72,7 @@ saveBtn.addEventListener("click", saveSpot);
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
-      await navigator.serviceWorker.register("/sw.js");
+      await navigator.serviceWorker.register("./sw.js");
     } catch (e) {
       // If SW fails, app still works online.
       console.warn("Service worker failed:", e);
