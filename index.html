@@ -19,6 +19,26 @@
 </head>
 
 <body>
+<!-- PIN LOCK OVERLAY -->
+<div id="pinOverlay" class="pin-overlay hidden">
+  <div class="pin-card">
+    <h2 id="pinTitle">Enter PIN</h2>
+
+    <input
+      id="pinInput"
+      type="password"
+      inputmode="numeric"
+      maxlength="4"
+      placeholder="••••"
+      autocomplete="off"
+    />
+
+    <button id="pinBtn">Unlock</button>
+    <div id="pinMsg" class="pin-msg"></div>
+  </div>
+</div>
+
+  
   <main class="card">
     <h1>Gold Melt (Offline PWA)</h1>
     <p class="muted">Enter spot price manually to get pre-1933 melt values + AGE values.</p>
@@ -75,6 +95,7 @@
   <script src="./app.js"></script>
 </body>
 </html>
+
 
 
 
