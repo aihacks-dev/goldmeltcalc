@@ -1,4 +1,4 @@
-const APP_VERSION = "v4";
+const APP_VERSION = "v6";
 
 // Pre-1933 US gold approximate AGW (troy oz)
 const PRE33 = [
@@ -155,3 +155,4 @@ const versionEl = document.getElementById("version");
 if (versionEl) {
   versionEl.textContent = APP_VERSION;
 }
+
